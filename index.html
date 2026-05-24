@@ -2,105 +2,268 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>988 | The revival.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>988 OS</title>
+
 <style>
-    body {
-        margin: 0;
-        padding: 0;
-        background-color: #0a0014; /* deep black-purple */
-        color: #d6b3ff; /* soft purple text */
-        font-family: "Lucida Console", Monaco, monospace;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        text-align: center;
-    }
+body {
+  margin: 0;
+  font-family: monospace;
+  background: black;
+  overflow: hidden;
+  color: white;
+}
 
-    .container {
-        max-width: 900px;
-        padding: 20px;
-    }
+/* Boot screen */
+#boot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: black;
+  color: #777;
+  letter-spacing: 0.35em;
+  cursor: pointer;
+  transition: opacity 0.8s ease;
+}
 
-    .title {
-        margin-bottom: 20px;
-    }
+#boot.fade {
+  opacity: 0;
+  pointer-events: none;
+}
 
-    .code {
-        margin: 20px 0;
-        font-weight: bold;
-        color: #bb66ff; /* brighter purple accent */
-    }
+/* Desktop */
+#desktop {
+  display: none;
+  height: 100vh;
+  position: relative;
+  background: url("https://files.catbox.moe/9agjx8.jpg") center/cover no-repeat;
+}
 
-    .highlight {
-        display: inline-block;
-        background: #bb66ff; /* purple box */
-        color: #0a0014; /* dark text inside */
-        padding: 4px 6px;
-        margin: 15px 0;
-    }
+#desktop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+}
 
-    .technical {
-        margin-top: 30px;
-        color: #9966cc;
-    }
+/* Icons */
+.icon {
+  width: 80px;
+  text-align: center;
+  cursor: pointer;
+  position: absolute;
+  z-index: 2;
+  transition: transform 0.15s ease;
+}
 
-    .roster {
-        margin-top: 50px;
-    }
+.icon:hover {
+  transform: scale(1.05);
+}
 
-    .work {
-        margin-top: 50px;
-    }
+.icon img {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+}
 
-    .work a {
-        color: #c084ff; /* link purple */
-        text-decoration: none;
-    }
+.icon span {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #ddd;
+}
 
-    .work a:hover {
-        text-decoration: underline;
-    }
+/* Window */
+.window {
+  position: absolute;
+  width: 360px;
+  background: rgba(18,18,18,0.95);
+  border: 1px solid #333;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  display: none;
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 10;
+  animation: pop 0.15s ease;
+}
+
+@keyframes pop {
+  from { transform: scale(0.98); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.titlebar {
+  background: #1b1b1b;
+  padding: 6px 8px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  cursor: grab;
+  user-select: none;
+}
+
+.titlebar span {
+  cursor: pointer;
+  color: #aaa;
+}
+
+.titlebar span:hover {
+  color: white;
+}
+
+.content {
+  padding: 10px;
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.4em;
+}
+
+/* Taskbar */
+#taskbar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 28px;
+  background: rgba(15,15,15,0.9);
+  border-top: 1px solid #222;
+  z-index: 5;
+}
 </style>
 </head>
+
 <body>
-<div class="container">
 
-    <div class="title">
-       A spark has been detected in the 988 servers and you have been redirected to the 808 Page.
+<div id="boot">CLICK TO BOOT 988</div>
+<div id="desktop"></div>
+
+<script>
+const desktop = document.getElementById("desktop");
+const boot = document.getElementById("boot");
+
+/* smoother boot */
+boot.onclick = () => {
+  boot.classList.add("fade");
+  setTimeout(() => {
+    boot.style.display = "none";
+    desktop.style.display = "block";
+  }, 800);
+};
+
+/* icons */
+const ICONS = [
+  { id:"about", name:"About", img:"https://cdn-icons-png.flaticon.com/512/716/716784.png", x:30, y:30 },
+  { id:"files", name:"Files", img:"https://cdn-icons-png.flaticon.com/512/716/716784.png", x:30, y:120 },
+  { id:"members", name:"Members", img:"https://cdn-icons-png.flaticon.com/512/716/716784.png", x:30, y:210 },
+
+  { id:"hanako", name:"Hanako", img:"https://i.pinimg.com/1200x/d9/6a/a6/d96aa652ba914187e77abaa0535edc82.jpg", x:150, y:30 },
+  { id:"nullify", name:"Nullify", img:"https://i.pinimg.com/736x/bb/1a/7a/bb1a7a995421a190f10ae32d309a3ccc.jpg", x:150, y:120 },
+  { id:"kaeron", name:"Kaeron", img:"https://files.catbox.moe/90x6f8.jpg", x:150, y:210 },
+  { id:"geld", name:"Geld", img:"https://i.pinimg.com/736x/d8/e8/06/d8e806a4fc6dcfdce7eea2453cc424c0.jpg", x:150, y:300 },
+  { id:"chilly", name:"Chilly", img:"https://files.catbox.moe/m4fjs5.jpg", x:150, y:390 }
+];
+
+ICONS.forEach(ic => {
+  const el = document.createElement("div");
+  el.className = "icon";
+  el.style.left = ic.x + "px";
+  el.style.top = ic.y + "px";
+  el.onclick = () => openWin(ic.id);
+
+  el.innerHTML = `
+    <img src="${ic.img}">
+    <span>${ic.name}</span>
+  `;
+  desktop.appendChild(el);
+});
+
+/* windows */
+function makeWindow(id, title, content, x, y) {
+  const w = document.createElement("div");
+  w.className = "window";
+  w.id = id;
+  w.style.left = x + "px";
+  w.style.top = y + "px";
+
+  w.innerHTML = `
+    <div class="titlebar">
+      <div>${title}</div>
+      <span onclick="closeWin('${id}')">✕</span>
     </div>
+    <div class="content">${content}</div>
+  `;
 
-    <div class="code">
-        988_IS_BACK_808
-    </div>
+  desktop.appendChild(w);
+}
 
-    <div>
-If you're reading this, 988 the crisis hotline has returned, and we will be working again soon.
+makeWindow(
+  "about",
+  "About",
+  `If you're reading this, 988 the crisis hotline has returned, and we will be working again soon. Nothing has changed.
+We just decided it is time for the return of, in my opinion, my greatest creation.
 
-Nothing has changed, We just decided it is time for the return of in my opinion my greatest creation.
+We hope to present good work and we will be the best we have ever been.`,
+  100,
+  150
+);
 
-We hope to present good work and we will be the best we have ever been.
+makeWindow("files","Files",`
+  <a class="file-link" href="https://doxbin.com/user/handjob" target="_blank">Doxbin</a>
+  <a class="file-link" href="https://discord.gg/988" target="_blank">Discord</a>
+  <a class="file-link" href="https://t.me/FemboysSP" target="_blank">Telegram</a>
+`,160,260);
 
-<div class="roster">
-    988; Hanako, Nullify, Kaeron, & Geld.
-</div>
+makeWindow("members","Members",`
+  Hanako<br>
+  Nullify<br>
+  Kaeron<br>
+  Geld<br>
+  Chilly
+`,260,320);
 
-<div class="work">
-    All our work will be found at <a href="#">Our account.</a>
-</div>
+["hanako","nullify","kaeron","geld","chilly"].forEach((m,i)=>{
+  makeWindow(m, m.charAt(0).toUpperCase()+m.slice(1), "Member profile", 80+i*30, 500+i*15);
+});
 
-    </div>
+/* window controls */
+function openWin(id){
+  const w = document.getElementById(id);
+  if(!w) return;
+  w.style.display = "block";
+  w.style.zIndex = Date.now();
+}
 
-    <div class="highlight">
-       Returning soon. &lt;3  Sincerly - Hanako, & Nullify
-    </div>
+function closeWin(id){
+  const w = document.getElementById(id);
+  if(w) w.style.display = "none";
+}
 
-    <div class="technical">
-        <div>Technical Information:</div>
-        <br>
-        *** STOP: 0x000000ED (0x80F128D0, exc000009c, exe0000000, 0x00000000)
-    </div>
+/* drag system (smoother + safer) */
+document.addEventListener("pointerdown", (e) => {
+  const bar = e.target.closest(".titlebar");
+  if(!bar) return;
 
-</div>
+  const win = bar.parentElement;
+  let offsetX = e.clientX - win.offsetLeft;
+  let offsetY = e.clientY - win.offsetTop;
+
+  win.style.zIndex = Date.now();
+
+  function move(e){
+    win.style.left = (e.clientX - offsetX) + "px";
+    win.style.top = (e.clientY - offsetY) + "px";
+  }
+
+  function up(){
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", up);
+  }
+
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", up);
+});
+</script>
+
 </body>
 </html>
